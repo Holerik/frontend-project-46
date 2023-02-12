@@ -1,0 +1,34 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "description": "Вычислитель отличий",
+  "main": "index.js",
+  "scripts": {
+    "test": "testGenDiff"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Holerik/frontend-project-46.git"
+  },
+  "keywords": [
+    "diff"
+  ],
+  "author": "Holerik",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Holerik/frontend-project-46/issues"
+  },
+  "homepage": "https://github.com/Holerik/frontend-project-46#readme",
+  "dependencies": {
+    "commander": "^10.0.0",
+    "eslint": "^8.32.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5"
+  },
+  "devDependencies": {
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.2"
+  }
+}
