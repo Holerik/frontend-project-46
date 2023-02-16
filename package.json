@@ -2,7 +2,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "Вычислитель отличий",
-  "main": "index.js",
+  "main": "src/gendiff.js",
   "scripts": {
     "test": "testGenDiff"
   },
@@ -24,7 +24,11 @@
     "commander": "^10.0.0",
     "eslint": "^8.32.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.27.5"
+    "eslint-plugin-import": "^2.27.5",
+    "lodash": "^4.17.21",
+    "request": "^2.88.2",
+    "terminalizer": "^0.9.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "eslint": "^8.2.0",
