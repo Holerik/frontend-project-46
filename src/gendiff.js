@@ -39,53 +39,43 @@ const genDifferenceString = (buf1, buf2) => {
   return diff;
 };
 
-const genDifference = (file1, file2) => {
-  let res = 'unknown error!';
+const getJSONObject = (file) => {
   const cwd = process.cwd();
-  let fd1 = 0;
-  let fd2 = 0;
-  if (!file1.endsWith(FILE_JSON)) {
-    file1 += `.${FILE_JSON}`;
+  let fd = 0;
+  const jsonObj = {
+    res: 'unknown error!'
   }
-  if (!file2.endsWith(FILE_JSON)) {
-    file2 += `.${FILE_JSON}`;
+  if (!file.endsWith(FILE_JSON)) {
+    file += `.${FILE_JSON}`;
   }
-  let fname1 = path.resolve(file1);
-  let fname2 = path.resolve(file2);
-  if (fs.existsSync(fname1)) {
-    fd1 = fs.openSync(fname1, 'r');
+  let fname = path.resolve(file);
+  if (fs.existsSync(fname)) {
+    fd = fs.openSync(fname, 'r');
   } else {
-    const fInfo = path.parse(file1);
-    fname1 = `${cwd}/${fInfo.base}`;
-    if (fs.existsSync(fname1)) {
-      fd1 = fs.openSync(fname1, 'r');
+    const fInfo = path.parse(file);
+    fname = `${cwd}/${fInfo.base}`;
+    if (fs.existsSync(fname)) {
+      fd = fs.openSync(fname, 'r');
     } else {
-      res = `file ${file1} is not exists`;
+      jsonObj.res = `file ${file} is not exists`;
     }
   }
-  if (fs.existsSync(fname2)) {
-    fd2 = fs.openSync(fname2, 'r');
+  if (fd !== 0) {
+    jsonObj.buffer = JSON.parse(fs.readFileSync(fd));
+    jsonObj.res = '';
+    fs.closeSync(fd);
+  }
+  return jsonObj;
+}
+
+const genDifference1 = (file1, file2) => {
+  const jsonObj1 = getJSONObject(file1);
+  const jsonObj2 = getJSONObject(file2);
+  let res = '';
+  if (jsonObj1.res === '' && jsonObj2.res === '') {
+    res = genDifferenceString(jsonObj1.buffer, jsonObj2.buffer);
   } else {
-    const fInfo = path.parse(file2);
-    fname2 = `${cwd}/${fInfo.base}`;
-    if (fs.existsSync(fname2)) {
-      fd1 = fs.openSync(fname2, 'r');
-    } else {
-      res = `file ${file2} is not exists`;
-    }
-  }
-  if (fd1 !== 0 && fd2 !== 0) {
-    if (fname1.endsWith(FILE_JSON)) {
-      const buffer1 = JSON.parse(fs.readFileSync(fd1));
-      const buffer2 = JSON.parse(fs.readFileSync(fd2));
-      res = genDifferenceString(buffer1, buffer2);
-    }
-  }
-  if (fd1 !== 0) {
-    fs.closeSync(fd1);
-  }
-  if (fd2 !== 0) {
-    fs.closeSync(fd2);
+    res = jsonObj1.res.length > 0 ? jsonObj1.res : jsonObj2.res;
   }
   return res;
 };
