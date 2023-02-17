@@ -39,8 +39,14 @@ const genDifferenceString = (buf1, buf2) => {
   return diff;
 };
 
+const processFile = (fname) => {
+  if (fs.existsSync(fname)) {
+    return fs.openSync(fname, 'r');
+  };
+  return 0;
+};
+
 const getJSONObject = (file) => {
-  const cwd = process.cwd();
   let fd = 0;
   const jsonObj = {
     res: 'unknown error!'
@@ -48,27 +54,22 @@ const getJSONObject = (file) => {
   if (!file.endsWith(FILE_JSON)) {
     file += `.${FILE_JSON}`;
   }
-  let fname = path.resolve(file);
-  if (fs.existsSync(fname)) {
-    fd = fs.openSync(fname, 'r');
-  } else {
+  fd = processFile(path.resolve(file));
+  if (fd === 0) {
     const fInfo = path.parse(file);
-    fname = `${cwd}/${fInfo.base}`;
-    if (fs.existsSync(fname)) {
-      fd = fs.openSync(fname, 'r');
-    } else {
-      jsonObj.res = `file ${file} is not exists`;
-    }
+    fd = processFile(`${process.cwd()}/${fInfo.base}`);
   }
   if (fd !== 0) {
     jsonObj.buffer = JSON.parse(fs.readFileSync(fd));
     jsonObj.res = '';
     fs.closeSync(fd);
+  } else {
+    jsonObj.res = `file ${file} is not exists`;
   }
   return jsonObj;
-}
+};
 
-const genDifference1 = (file1, file2) => {
+const genDifference = (file1, file2) => {
   const jsonObj1 = getJSONObject(file1);
   const jsonObj2 = getJSONObject(file2);
   let res = '';
