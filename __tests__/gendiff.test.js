@@ -17,7 +17,12 @@ const readFixture = (filename) => fs.readFileSync(
 });
 
 test('gendiff fixture test', () => {
-  const diff = gendiff('file1', 'file2');
+  const diff = gendiff('file1.json', 'file2');
   const fixDiff = readFixture('gendiff.fix');
   expect(diff).toEqual(fixDiff);
+});
+
+test('gendiff file test', () => {
+  const diff = gendiff('file3', 'file4');
+  expect(diff).toEqual('file file3.json is not exists');
 });
