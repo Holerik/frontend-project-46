@@ -1,9 +1,14 @@
+# Включает поддержку конструкции import.meta.url
+parserOptions:
+  ecmaVersion: 2020
 extends:
   - 'airbnb-base'
 env:
   node: true
   browser: true
 rules:
+# разрешает подчёркивание в именах только для двух констант
+  no-underscore-dangle: [2, { "allow": ["__filename", "__dirname"] }]
   no-console: off
   import/extensions:
     - 'warn'
