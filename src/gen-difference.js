@@ -19,10 +19,10 @@ const genDifferenceString = (buf1, buf2) => {
   // ключи, отсутствующие во 2 файле идут с -
   const diff12 = _.difference(keys1, keys2);
   const arr = [];
-  diff12.forEach(key => arr.push([`- ${key}`, buf1[key]]));
-  diff21.forEach(key => arr.push([`+ ${key}`, buf2[key]]));
+  diff12.forEach((key) => arr.push([`- ${key}`, buf1[key]]));
+  diff21.forEach((key) => arr.push([`+ ${key}`, buf2[key]]));
   const inters = _.intersection(keys1, keys2);
-  inters.forEach(key => {
+  inters.forEach((key) => {
     if (buf1[key] === buf2[key]) {
       arr.push([`  ${key}`, buf1[key]]);
     } else {
@@ -33,7 +33,7 @@ const genDifferenceString = (buf1, buf2) => {
   const sortedArr = _.sortBy(arr, (item) => item[0].charCodeAt(2));
   // arr.sort((item1, item2) => item1[0].charCodeAt(2) - item2[0].charCodeAt(2));
   let diff = '{\r\n';
-  sortedArr.forEach(item => {
+  sortedArr.forEach((item) => {
     diff += `  ${item[0]}: ${item[1]}\r\n`;
   });
   diff += '}\r\n';
@@ -43,25 +43,26 @@ const genDifferenceString = (buf1, buf2) => {
 const processFile = (fname) => {
   if (fs.existsSync(fname)) {
     return fs.openSync(fname, 'r');
-  };
+  }
   return 0;
 };
 
 const getJSONObject = (file) => {
   let fd = 0;
+  let fname = file;
   const jsonObj = {
-    res: 'unknown error!'
-  }
+    res: 'unknown error!',
+  };
   if (!file.endsWith(FILE_JSON)) {
-    file += `.${FILE_JSON}`;
+    fname += `.${FILE_JSON}`;
   }
-  fd = processFile(getFilePath(file));
+  fd = processFile(getFilePath(fname));
   if (fd !== 0) {
     jsonObj.buffer = JSON.parse(fs.readFileSync(fd));
     jsonObj.res = '';
     fs.closeSync(fd);
   } else {
-    jsonObj.res = `file ${file} is not exists`;
+    jsonObj.res = `file ${fname} is not exists`;
   }
   return jsonObj;
 };

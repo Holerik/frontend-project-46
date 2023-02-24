@@ -3,6 +3,7 @@ parserOptions:
   ecmaVersion: 2020
 extends:
   - 'airbnb-base'
+  - 'plugin:jest/recommended'
 env:
   node: true
   browser: true
@@ -12,4 +13,6 @@ rules:
   no-console: off
   import/extensions:
     - 'warn'
-    - 'ignore Packages'
+    - 'ignorePackages'
+    - js: always
+  linebreak-style: ["error", "windows"]
