@@ -22,5 +22,6 @@ jobs:
         uses: hexlet/project-action@release
         with:
           hexlet-id: ${{ secrets.HEXLET_ID }}
+      - run: npm install
       - run: npx eslint .
       - run: npx jest
