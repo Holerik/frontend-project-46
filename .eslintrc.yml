@@ -15,4 +15,4 @@ rules:
     - 'warn'
     - 'ignorePackages'
     - js: always
-  linebreak-style: ["error", "windows"]
+  linebreak-style: ["error", "unix"]

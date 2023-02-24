@@ -32,11 +32,11 @@ const genDifferenceString = (buf1, buf2) => {
   });
   const sortedArr = _.sortBy(arr, (item) => item[0].charCodeAt(2));
   // arr.sort((item1, item2) => item1[0].charCodeAt(2) - item2[0].charCodeAt(2));
-  let diff = '{\r\n';
+  let diff = '{\n';
   sortedArr.forEach((item) => {
-    diff += `  ${item[0]}: ${item[1]}\r\n`;
+    diff += `  ${item[0]}: ${item[1]}\n`;
   });
-  diff += '}\r\n';
+  diff += '}\n';
   return diff;
 };
 
