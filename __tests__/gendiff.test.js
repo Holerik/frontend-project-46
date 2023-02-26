@@ -22,13 +22,29 @@ const readFixture = (filename) => fs.readFileSync(
   },
 );
 
-test('gendiff fixture test', () => {
-  const diff = gendiff('file1.json', 'file2');
+test('gendiff json test', () => {
+  const diff = gendiff('file1.json', 'file2.json');
   const fixDiff = readFixture('gendiff.fix');
   expect(diff).toEqual(fixDiff);
 });
 
-test('gendiff file test', () => {
-  const diff = gendiff('file3', 'file4');
-  expect(diff).toEqual('file file3.json is not exists');
+test('gendiff yaml test', () => {
+  const diff = gendiff('file1.yml', 'file2.yml');
+  const fixDiff = readFixture('gendiff.fix');
+  expect(diff).toEqual(fixDiff);
+});
+
+test('gendiff mixed file test', () => {
+  const diff = gendiff('file1.json', 'file2.yml');
+  expect(diff).toEqual('error: mixed file types');
+});
+
+test('gendiff no file test', () => {
+  const diff = gendiff('file1.json', 'file3.json');
+  expect(diff).toEqual('file file3.json: open error');
+});
+
+test('gendiff no parser test', () => {
+  const diff = gendiff('file1.xml', 'file3.xml');
+  expect(diff).toEqual('error: no parser for file type xml');
 });

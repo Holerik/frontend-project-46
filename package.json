@@ -25,10 +25,10 @@
   "homepage": "https://github.com/Holerik/frontend-project-46#readme",
   "dependencies": {
     "commander": "^10.0.0",
+    "js-yaml": "^4.1.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@babel/plugin-transform-modules-commonjs": "^7.20.11",
     "@jest/globals": "^29.4.3",
     "eslint": "^8.34.0",
     "eslint-config-airbnb": "^19.0.4",

@@ -1,15 +1,7 @@
 // getDifference.js
-import fs from 'node:fs';
 import _ from 'lodash';
-import { fileURLToPath } from 'url';
-import path, { dirname } from 'node:path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const FILE_JSON = 'json';
-
-const getFilePath = (fname) => path.join(__dirname, '..', fname);
+import path from 'node:path';
+import parseFile from './parser.js';
 
 const genDifferenceString = (buf1, buf2) => {
   const keys1 = Object.keys(buf1);
@@ -40,38 +32,18 @@ const genDifferenceString = (buf1, buf2) => {
   return diff;
 };
 
-const processFile = (fname) => {
-  if (fs.existsSync(fname)) {
-    return fs.openSync(fname, 'r');
-  }
-  return 0;
-};
-
-const getJSONObject = (file) => {
-  let fd = 0;
-  let fname = file;
-  const jsonObj = {
-    res: 'unknown error!',
-  };
-  if (!file.endsWith(FILE_JSON)) {
-    fname += `.${FILE_JSON}`;
-  }
-  fd = processFile(getFilePath(fname));
-  if (fd !== 0) {
-    jsonObj.buffer = JSON.parse(fs.readFileSync(fd));
-    jsonObj.res = '';
-    fs.closeSync(fd);
-  } else {
-    jsonObj.res = `file ${fname} is not exists`;
-  }
-  return jsonObj;
-};
-
 export default (file1, file2) => {
-  const jsonObj1 = getJSONObject(file1);
-  const jsonObj2 = getJSONObject(file2);
-  if (jsonObj1.res === '' && jsonObj2.res === '') {
-    return genDifferenceString(jsonObj1.buffer, jsonObj2.buffer);
+  let strOut = 'error: mixed file types';
+  const ext1 = path.extname(file1).slice(1);
+  const ext2 = path.extname(file2).slice(1);
+  if (ext1 === ext2) {
+    const obj1 = parseFile(ext1, file1);
+    const obj2 = parseFile(ext2, file2);
+    if (obj1.res === '' && obj2.res === '') {
+      strOut = genDifferenceString(obj1.buffer, obj2.buffer);
+    } else {
+      strOut = obj1.res.length > 0 ? obj1.res : obj2.res;
+    }
   }
-  return jsonObj1.res.length > 0 ? jsonObj1.res : jsonObj2.res;
+  return strOut;
 };
