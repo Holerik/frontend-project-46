@@ -4,7 +4,7 @@
 import { program } from 'commander';
 import genDifference from './gen-difference.js';
 
-const genDiff = (file1, file2) => {
+const stylish = (file1, file2) => {
   console.log(genDifference(file1, file2));
 };
 
@@ -16,7 +16,7 @@ function compareFiles() {
     .version('0.0.1', '-v, --version', 'output the version number')
     .option('-f, --format <type>', 'output format')
     .arguments('<filepath1> <filepath2>')
-    .action(genDiff)
+    .action(stylish)
     .parse(process.argv);
 }
 

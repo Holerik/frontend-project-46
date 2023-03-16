@@ -6,3 +6,7 @@
 https://cloud.mail.ru/public/QTLZ/HoX3zAPv1
 ### gendiff example compare yml
 https://cloud.mail.ru/public/P3M4/mF4Zv3dz8
+### gendiff example compare structured json
+https://cloud.mail.ru/public/jPrc/z6WvMuoKP
+### gendiff example compare structured yml
+https://cloud.mail.ru/public/DD2x/zJuy5u9hT
