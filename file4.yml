@@ -8,6 +8,7 @@ common:
     key5: value5
   setting6:
     key: value
+    color: ''
     ops: vops
     doge:
       wow: so much

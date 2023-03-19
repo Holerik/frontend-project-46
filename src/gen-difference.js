@@ -5,7 +5,7 @@
 import _ from 'lodash';
 import path from 'node:path';
 import parseFile from './parser.js';
-import sortResult from './get-sorted.js';
+import formatter from '../formatters/index.js';
 
 const createEnum = (values) => {
   const enumObject = {};
@@ -149,7 +149,7 @@ const genDifference = (data1, data2) => {
   return diff;
 };
 
-export default (file1, file2) => {
+export default (file1, file2, style) => {
   let strOut = 'error: mixed file types';
   const ext1 = path.extname(file1).slice(1);
   const ext2 = path.extname(file2).slice(1);
@@ -161,10 +161,11 @@ export default (file1, file2) => {
       const data2 = [OBJ_IDENT, OBJ_ROOT, 0, flags.DOTH];
       genData(obj1.buffer, data1, 1, flags.FIRST);
       genData(obj2.buffer, data2, 1, flags.SECOND);
-      strOut = sortResult(genDifference(data1, data2));
+      strOut = formatter(genDifference(data1, data2), style);
     } else {
       strOut = obj1.res.length > 0 ? obj1.res : obj2.res;
     }
   }
+  console.log(strOut);
   return strOut;
 };

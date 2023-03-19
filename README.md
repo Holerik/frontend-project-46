@@ -10,3 +10,5 @@ https://cloud.mail.ru/public/P3M4/mF4Zv3dz8
 https://cloud.mail.ru/public/jPrc/z6WvMuoKP
 ### gendiff example compare structured yml
 https://cloud.mail.ru/public/DD2x/zJuy5u9hT
+### gendiff example compare structured json in plain type format
+https://cloud.mail.ru/public/hzC5/QbWTCToZE

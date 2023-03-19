@@ -10,6 +10,7 @@
     "setting6": {
       "key": "value",
       "ops": "vops",
+      "color": "",
       "doge": {
         "wow": "so much"
       }
