@@ -21,21 +21,22 @@ const setAdded = (value) => {
 
 const whithoutComma = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
 
+const getOut = (value) => {
+  if (value.length === 0) {
+    return "''";
+  }
+  return whithoutComma(value) ? `${value}` : `'${value}'`;
+};
+
 const setUpdated = (value1, value2) => {
   let out = 'was updated. From ';
   if (value1 === COMPLEX_VALUE) {
     out += COMPLEX_VALUE;
-  } else if (value1.length === 0) {
-    out += "''";
   } else {
-    out += whithoutComma(value1) ? `${value1}` : `'${value1}'`;
+    out += getOut(value1);
   }
   out += ' to ';
-  if (value2.length === 0) {
-    out += "''";
-  } else {
-    out += whithoutComma(value2) ? `${value2}` : `'${value2}'`;
-  }
+  out += getOut(value2);
   return out;
 };
 

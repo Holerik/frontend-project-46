@@ -62,6 +62,14 @@ const setAllSubItems = (obj, flag) => {
   });
 };
 
+const getDiffArr = (keys, flag, predicat, buffer) => {
+  const arr = [];
+  keys.forEach((key) => {
+    arr.push([`${flag === flags.BOTH ? predicat : ' '} ${key}`, buffer[key]]);
+  });
+  return arr;
+};
+
 // Массив полей, содержащий результаты сравнения полей простых объектов
 const genDifferenceArray = (buf1, buf2, level, flag) => {
   const keys1 = Object.keys(buf1);
@@ -70,13 +78,7 @@ const genDifferenceArray = (buf1, buf2, level, flag) => {
   const diff21 = _.difference(keys2, keys1);
   // ключи, отсутствующие во 2 файле идут с -
   const diff12 = _.difference(keys1, keys2);
-  const arr = [];
-  diff12.forEach((key) => {
-    arr.push([`${flag === flags.BOTH ? '-' : ' '} ${key}`, buf1[key]]);
-  });
-  diff21.forEach((key) => {
-    arr.push([`${flag === flags.BOTH ? '+' : ' '} ${key}`, buf2[key]]);
-  });
+  const arr = _.concat(getDiffArr(diff12, flag, '-', buf1), getDiffArr(diff21, flag, '+', buf2));
   const inters = _.intersection(keys1, keys2);
   inters.forEach((key) => {
     if (buf1[key] === buf2[key]) {
