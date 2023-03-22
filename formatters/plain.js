@@ -19,13 +19,13 @@ const setAdded = (value) => {
   return out;
 };
 
-const whithoutComma = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
+const whithoutQuotas = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
 
 const getOut = (value) => {
   if (value.length === 0) {
     return "''";
   }
-  return whithoutComma(value) ? `${value}` : `'${value}'`;
+  return whithoutQuotas(value) ? `${value}` : `'${value}'`;
 };
 
 const setUpdated = (value1, value2) => {

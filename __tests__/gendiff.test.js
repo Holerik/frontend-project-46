@@ -36,20 +36,6 @@ describe('test plain data whith stylish formatter', () => {
   });
 });
 
-describe('test structured data whith plain formatter', () => {
-  test('gendiff json test', () => {
-    const diff = compare('file3.json', 'file4.json', 'plain');
-    const fixDiff = readFixture('plain.fix');
-    expect(diff).toEqual(fixDiff);
-  });
-
-  test('gendiff yaml test', () => {
-    const diff = compare('file3.yml', 'file4.yml', 'plain');
-    const fixDiff = readFixture('plain.fix');
-    expect(diff).toEqual(fixDiff);
-  });
-});
-
 describe('test structured data whith wrong formatter', () => {
   test('gendiff json test', () => {
     const diff = compare('file3.json', 'file4.json', 'unknown');
@@ -75,7 +61,7 @@ describe('test wrong data', () => {
   });
 });
 
-describe('test structured data', () => {
+describe('test structured data whith stylish formatter', () => {
   test('gendiff complex json test', () => {
     const diff = compare('file3.json', 'file4.json', 'stylish');
     const fixDiff = readFixture('compldiff.fix');
@@ -88,5 +74,58 @@ describe('test structured data', () => {
     const fixDiff = readFixture('compldiff.fix');
     // eslint-disable-next-line jest/no-standalone-expect
     expect(diff).toEqual(fixDiff);
+  });
+});
+
+describe('test structured data whith plain formatter', () => {
+  test('gendiff json test', () => {
+    const diff = compare('file3.json', 'file4.json', 'plain');
+    const fixDiff = readFixture('plain.fix');
+    expect(diff).toEqual(fixDiff);
+  });
+
+  test('gendiff yaml test', () => {
+    const diff = compare('file3.yml', 'file4.yml', 'plain');
+    const fixDiff = readFixture('plain.fix');
+    expect(diff).toEqual(fixDiff);
+  });
+});
+
+describe('test plain data whith json formatter', () => {
+  let json = {};
+  beforeEach(() => {
+    json = JSON.parse(compare('file1.json', 'file2.json', 'json'));
+  });
+
+  test('gendiff json plain test', () => {
+    const plainDiff = readFixture('gendiff.fix');
+    expect(plainDiff).toEqual(json.stylish);
+  });
+
+  test('gendiff json contains file info', () => {
+    expect(json.filePath1).toEqual(expect.stringContaining('file1.json'));
+    expect(json.filePath2).toEqual(expect.stringContaining('file2.json'));
+  });
+});
+
+describe('test structured data whith json formatter', () => {
+  let json = {};
+  beforeEach(() => {
+    json = JSON.parse(compare('file3.json', 'file4.json', 'json'));
+  });
+
+  test('gendiff json plain test', () => {
+    const plainDiff = readFixture('plain.fix');
+    expect(plainDiff).toEqual(json.plain);
+  });
+
+  test('gendiff json stylish test', () => {
+    const stylishDiff = readFixture('compldiff.fix');
+    expect(stylishDiff).toEqual(json.stylish);
+  });
+
+  test('gendiff json contains file info', () => {
+    expect(json.filePath1).toEqual(expect.stringContaining('file3.json'));
+    expect(json.filePath2).toEqual(expect.stringContaining('file4.json'));
   });
 });

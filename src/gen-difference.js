@@ -163,7 +163,7 @@ export default (file1, file2, style) => {
       const data2 = [OBJ_IDENT, OBJ_ROOT, 0, flags.DOTH];
       genData(obj1.buffer, data1, 1, flags.FIRST);
       genData(obj2.buffer, data2, 1, flags.SECOND);
-      strOut = formatter(genDifference(data1, data2), style);
+      strOut = formatter(genDifference(data1, data2), file1, file2, style);
     } else {
       strOut = obj1.res.length > 0 ? obj1.res : obj2.res;
     }
