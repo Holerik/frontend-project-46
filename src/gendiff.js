@@ -2,10 +2,11 @@
 // gendiff.js
 
 import { program } from 'commander';
+import _ from 'lodash';
 import compare from './gen-difference.js';
 
 const genDiff = (file1, file2, options) => {
-  const style = options.format === undefined ? 'plain' : options.format;
+  const style = _.has(options, 'format') ? options.format : 'stylish';
   return compare(file1, file2, style);
 };
 
