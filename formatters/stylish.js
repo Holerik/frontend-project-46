@@ -85,7 +85,7 @@ export default (source) => {
   const strArr = source.split('\n');
   const keys = getSortedObjKeys(strArr, 0);
   const str = getAssemblyObject(strArr, keys);
-  return `{\n${str}}\n`;
+  return `{\n${str}}`;
 };
 
 export { getSortedObjKeys, getObjValue, getPropName };

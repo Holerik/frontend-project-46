@@ -103,5 +103,6 @@ const getPropValues = (strArr, ind, parent) => {
 
 export default (source) => {
   const strArr = source.split('\n');
-  return getPropValues(strArr, 0, '');
+  const out = getPropValues(strArr, 0, '');
+  return out.slice(0, out.length - 1);
 };
