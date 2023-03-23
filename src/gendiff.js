@@ -25,4 +25,4 @@ function compareFiles() {
 
 compareFiles();
 
-export default genDiff;
+export default compare;
