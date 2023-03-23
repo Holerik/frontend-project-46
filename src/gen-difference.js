@@ -96,7 +96,8 @@ const genDifferenceString = (buf1, buf2, level, flag) => {
   const arr = genDifferenceArray(buf1, buf2, level, flag);
   let diff = '';
   arr.forEach((item) => {
-    const str = `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
+    const str = item[1] === '' ? `${item[0]}: \n`
+      : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
     diff += str.padStart(str.length + 4 * level + 2, ' ');
   });
   return diff;
