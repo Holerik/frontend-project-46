@@ -6,7 +6,7 @@ import stylish from './stylish.js';
 import json from './json.js';
 
 const formatter = {
-  plain: (data) => plain(data),
+  plain: (data) => plain(stylish(data)),
   stylish: (data) => stylish(data),
   json: (data, f1, f2) => json(stylish(data), plain(data), f1, f2),
 };

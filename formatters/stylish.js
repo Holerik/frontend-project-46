@@ -37,7 +37,7 @@ const getSortedObjKeys = (strArr, pos) => {
   for (let ind = pos + 1; ind < strArr.length - 1; ind += 1) {
     const propName = getPropName(strArr[ind]);
     if (propName.length > 0) {
-      keys.push([propName, ind]);
+      keys.push([propName, ind, pos]);
     }
     if (strArr[ind].includes('{')) {
       ind = skipInternalObjectProps(strArr, ind);

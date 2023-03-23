@@ -25,16 +25,15 @@ const getOut = (value) => {
   if (value.length === 0) {
     return "''";
   }
+  if (value === COMPLEX_VALUE) {
+    return COMPLEX_VALUE;
+  }
   return whithoutQuotas(value) ? `${value}` : `'${value}'`;
 };
 
 const setUpdated = (value1, value2) => {
   let out = 'was updated. From ';
-  if (value1 === COMPLEX_VALUE) {
-    out += COMPLEX_VALUE;
-  } else {
-    out += getOut(value1);
-  }
+  out += getOut(value1);
   out += ' to ';
   out += getOut(value2);
   return out;
@@ -45,18 +44,12 @@ const getValue = (str) => {
   return str.slice(str.indexOf(':') + 2, length);
 };
 
-const findAnotherPropValue = (strArr, key, propValue) => {
+const findAnotherPropValue = (strArr, key, propValue, keys) => {
   let res = propValue;
-  for (let ind = key[1] + 1; ind < strArr.length - 1; ind += 1) {
-    if (strArr[ind].includes(key[0])) {
-      res = getValue(strArr[ind]);
-    }
-  }
-  if (res === propValue) {
-    for (let ind = key[1] - 1; ind > 0; ind -= 1) {
-      if (strArr[ind].includes(key[0])) {
-        res = getValue(strArr[ind]);
-      }
+  for (let i = 0; i < keys.length; i += 1) {
+    if (key[2] === keys[i][2] && keys[i][1] !== key[1] && keys[i][0] === key[0]) {
+      res = getValue(strArr[keys[i][1]]);
+      break;
     }
   }
   return res.includes('{') ? '[complex value]' : res;
@@ -73,7 +66,7 @@ const getPropValues = (strArr, ind, parent) => {
   keys.forEach((key) => {
     let res = getObjValue(strArr, key);
     let propValue = getValue(res);
-    const propValue1 = findAnotherPropValue(strArr, key, propValue);
+    const propValue1 = findAnotherPropValue(strArr, key, propValue, keys);
     if (propValue.includes('{')) {
       propValue = COMPLEX_VALUE;
       res = res.slice(0, res.indexOf(':'));
