@@ -16,6 +16,7 @@ function compareFiles() {
     .description('Compares two configuration files and shows a difference.\n')
     .version('0.0.1', '-v, --version', 'output the version number')
     .option('-f, --format <type>', 'output format')
+    .option('-c, --color [color]', 'output format')
     .arguments('<filepath1> <filepath2>')
     .action(gendiff)
     .parse(process.argv);
