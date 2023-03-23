@@ -19,7 +19,10 @@ const openFile = (fname) => {
 };
 
 const tryOpenFile = (fname) => {
-  let fd = openFile(getFilePath(fname));
+  let fd = openFile(fname);
+  if (fd === 0) {
+    fd = openFile(getFilePath(fname));
+  }
   if (fd === 0) {
     fd = openFile(getFixturePath(fname));
   }
