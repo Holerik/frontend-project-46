@@ -9,12 +9,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const getFilePath = (fname) => path.join(__dirname, '..', fname);
+const getFixturePath = (fname) => path.join(__dirname, '..', '__fixtures__', fname);
 
 const openFile = (fname) => {
   if (fs.existsSync(fname)) {
     return fs.openSync(fname);
   }
   return 0;
+};
+
+const tryOpenFile = (fname) => {
+  let fd = openFile(getFilePath(fname));
+  if (fd === 0) {
+    fd = openFile(getFixturePath(fname));
+  }
+  return fd;
 };
 
 const parser = {
@@ -36,7 +45,7 @@ export default (type, file) => {
       break;
   }
   if (fileParser) {
-    const fd = openFile(getFilePath(file));
+    const fd = tryOpenFile(file);
     if (fd !== 0) {
       obj.buffer = fileParser(fs.readFileSync(fd), { encoding: 'utf8', flag: 'r' });
       obj.res = '';
