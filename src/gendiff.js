@@ -4,9 +4,9 @@
 import { program } from 'commander';
 import compare from './gen-difference.js';
 
-const gendiff = (file1, file2, options) => {
+const genDiff = (file1, file2, options) => {
   const style = options.format === undefined ? 'plain' : options.format;
-  compare(file1, file2, style);
+  return compare(file1, file2, style);
 };
 
 function compareFiles() {
@@ -16,10 +16,12 @@ function compareFiles() {
     .description('Compares two configuration files and shows a difference.\n')
     .version('0.0.1', '-v, --version', 'output the version number')
     .allowUnknownOption()
-    .option('-f, --format <type>', 'output format')
+    .option('-f, --format <type>', 'output format', 'stylish')
     .arguments('<filepath1> <filepath2>')
-    .action(gendiff)
+    .action(genDiff)
     .parse(process.argv);
 }
 
 compareFiles();
+
+export default genDiff;
