@@ -11,9 +11,9 @@
         }
         setting6: {
           - color: blue
-          + color:
+          + color: 
             doge: {
-              - wow:
+              - wow: 
               + wow: so much
             }
             key: value

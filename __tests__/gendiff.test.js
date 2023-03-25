@@ -22,15 +22,17 @@ const readFixture = (filename) => fs.readFileSync(
   },
 );
 
+const genDiff = (f1, f2, style) => `${compare(f1, f2, style)}\n`;
+
 describe('test plain data whith stylish formatter', () => {
   test('gendiff json test', () => {
-    const diff = compare('file1.json', 'file2.json', 'stylish');
+    const diff = genDiff('file1.json', 'file2.json', 'stylish');
     const fixDiff = readFixture('gendiff.fix');
     expect(diff).toEqual(fixDiff);
   });
 
   test('gendiff yaml test', () => {
-    const diff = compare('file1.yml', 'file2.yml', 'stylish');
+    const diff = genDiff('file1.yml', 'file2.yml', 'stylish');
     const fixDiff = readFixture('gendiff.fix');
     expect(diff).toEqual(fixDiff);
   });
@@ -38,39 +40,39 @@ describe('test plain data whith stylish formatter', () => {
 
 describe('test structured data whith wrong formatter', () => {
   test('gendiff json test', () => {
-    const diff = compare('file3.json', 'file4.json', 'unknown');
-    const fixDiff = readFixture('plain.fix');
+    const diff = genDiff('file1.json', 'file2.json', 'unknown');
+    const fixDiff = readFixture('gendiff.fix');
     expect(diff).toEqual(fixDiff);
   });
 });
 
 describe('test wrong data', () => {
   test('gendiff mixed file test', () => {
-    const diff = compare('file1.json', 'file2.yml', 'stylish');
-    expect(diff).toEqual('error: mixed file types');
+    const diff = genDiff('file1.json', 'file2.yml', 'stylish');
+    expect(diff).toEqual('error: mixed file types\n');
   });
 
   test('gendiff no file test', () => {
-    const diff = compare('file1.json', 'file13.json', 'stylish');
-    expect(diff).toEqual('file file13.json: open error');
+    const diff = genDiff('file1.json', 'file13.json', 'stylish');
+    expect(diff).toEqual('file file13.json: open error\n');
   });
 
   test('gendiff no parser test', () => {
-    const diff = compare('file1.xml', 'file3.xml', 'stylish');
-    expect(diff).toEqual('error: no parser for file type xml');
+    const diff = genDiff('file1.xml', 'file3.xml', 'stylish');
+    expect(diff).toEqual('error: no parser for file type xml\n');
   });
 });
 
 describe('test structured data whith stylish formatter', () => {
   test('gendiff complex json test', () => {
-    const diff = compare('file3.json', 'file4.json', 'stylish');
+    const diff = genDiff('file3.json', 'file4.json', 'stylish');
     const fixDiff = readFixture('compldiff.fix');
     // eslint-disable-next-line jest/no-standalone-expect
     expect(diff).toEqual(fixDiff);
   });
 
   test('gendiff complex yaml test', () => {
-    const diff = compare('file3.yml', 'file4.yml', 'stylish');
+    const diff = genDiff('file3.yml', 'file4.yml', 'stylish');
     const fixDiff = readFixture('compldiff.fix');
     // eslint-disable-next-line jest/no-standalone-expect
     expect(diff).toEqual(fixDiff);
@@ -79,52 +81,53 @@ describe('test structured data whith stylish formatter', () => {
 
 describe('test structured data whith plain formatter', () => {
   test('gendiff json test', () => {
-    const diff = compare('file3.json', 'file4.json', 'plain');
+    const diff = genDiff('file3.json', 'file4.json', 'plain');
     const fixDiff = readFixture('plain.fix');
     expect(diff).toEqual(fixDiff);
   });
 
   test('gendiff yaml test', () => {
-    const diff = compare('file3.yml', 'file4.yml', 'plain');
+    const diff = genDiff('file3.yml', 'file4.yml', 'plain');
     const fixDiff = readFixture('plain.fix');
+    expect(diff).toEqual(fixDiff);
+  });
+
+  test('gendiff json test with another data', () => {
+    const diff = genDiff('file1.json', 'file2.json', 'plain');
+    const fixDiff = readFixture('genplain.fix');
     expect(diff).toEqual(fixDiff);
   });
 });
 
 describe('test plain data whith json formatter', () => {
-  let json = {};
-  beforeEach(() => {
-    json = JSON.parse(compare('file1.json', 'file2.json', 'json'));
-  });
-
-  test('gendiff json plain test', () => {
-    const plainDiff = readFixture('gendiff.fix');
-    expect(plainDiff).toEqual(json.stylish);
+  test('gendiff json stylish test', () => {
+    const json = JSON.parse(genDiff('file1.json', 'file2.json', 'json'));
+    const stylishDiff = readFixture('gendiff.fix');
+    expect(json.stylish).toEqual(stylishDiff.slice(0, stylishDiff.length - 1));
   });
 
   test('gendiff json contains file info', () => {
+    const json = JSON.parse(genDiff('file1.json', 'file2.json', 'json'));
     expect(json.filePath1).toEqual(expect.stringContaining('file1.json'));
     expect(json.filePath2).toEqual(expect.stringContaining('file2.json'));
   });
 });
 
 describe('test structured data whith json formatter', () => {
-  let json = {};
-  beforeEach(() => {
-    json = JSON.parse(compare('file3.json', 'file4.json', 'json'));
-  });
-
   test('gendiff json plain test', () => {
+    const json = JSON.parse(genDiff('file3.json', 'file4.json', 'json'));
     const plainDiff = readFixture('plain.fix');
-    expect(plainDiff).toEqual(json.plain);
+    expect(json.plain).toEqual(plainDiff.slice(0, plainDiff.length - 1));
   });
 
   test('gendiff json stylish test', () => {
+    const json = JSON.parse(genDiff('file3.json', 'file4.json', 'json'));
     const stylishDiff = readFixture('compldiff.fix');
-    expect(stylishDiff).toEqual(json.stylish);
+    expect(json.stylish).toEqual(stylishDiff.slice(0, stylishDiff.length - 1));
   });
 
   test('gendiff json contains file info', () => {
+    const json = JSON.parse(genDiff('file3.json', 'file4.json', 'json'));
     expect(json.filePath1).toEqual(expect.stringContaining('file3.json'));
     expect(json.filePath2).toEqual(expect.stringContaining('file4.json'));
   });

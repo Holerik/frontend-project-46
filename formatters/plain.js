@@ -10,13 +10,11 @@ const PROP = 'Property';
 const REMOVED = 'was removed';
 
 const setAdded = (value) => {
-  let out = 'was added with value: ';
+  const out = 'was added with value: ';
   if (value === COMPLEX_VALUE) {
-    out += COMPLEX_VALUE;
-  } else {
-    out += TEST_CHARS.includes(value) ? `${value}` : `'${value}'`;
+    return `${out}${COMPLEX_VALUE}`;
   }
-  return out;
+  return `${out}${TEST_CHARS.includes(value) ? `${value}` : `'${value}'`}`;
 };
 
 const whithoutQuotas = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
@@ -31,71 +29,66 @@ const getOut = (value) => {
   return whithoutQuotas(value) ? `${value}` : `'${value}'`;
 };
 
-const setUpdated = (value1, value2) => {
-  let out = 'was updated. From ';
-  out += getOut(value1);
-  out += ' to ';
-  out += getOut(value2);
-  return out;
-};
+const setUpdated = (value1, value2) => `was updated. From ${getOut(value1)} to ${getOut(value2)}`;
 
 const getValue = (str) => {
   const length = str.indexOf('\n') > 0 ? str.length - 1 : str.length;
   return str.slice(str.indexOf(':') + 2, length);
 };
 
+const modifyValue = (value) => (value.includes('{') ? '[complex value]' : value);
+
 const findAnotherPropValue = (strArr, key, propValue, keys) => {
-  let res = propValue;
-  for (let i = 0; i < keys.length; i += 1) {
-    if (key[2] === keys[i][2] && keys[i][1] !== key[1] && keys[i][0] === key[0]) {
-      res = getValue(strArr[keys[i][1]]);
-      break;
-    }
+  const index = keys.findIndex((elem) => key[2] === elem[2]
+    && elem[1] !== key[1] && elem[0] === key[0]);
+  if (index === -1) {
+    return modifyValue(propValue);
   }
-  return res.includes('{') ? '[complex value]' : res;
+  const res = getValue(strArr[keys[index][1]]);
+  return modifyValue(res);
 };
 
 const getPropValues = (strArr, ind, parent) => {
+  const obj = {
+    out: '',
+    comment: '',
+  };
+  const tempOwner = getPropName(strArr[ind]);
+  const owner = parent.length > 0 ? `${parent}.${tempOwner}` : tempOwner;
   const keys = getSortedObjKeys(strArr, ind);
-  let owner = parent;
-  if (ind > 0) {
-    owner = parent.length > 0 ? `${parent}.${getPropName(strArr[ind])}`
-      : getPropName(strArr[ind]);
-  }
-  let out = '';
   keys.forEach((key) => {
-    let res = getObjValue(strArr, key);
-    let propValue = getValue(res);
-    const propValue1 = findAnotherPropValue(strArr, key, propValue, keys);
-    if (propValue.includes('{')) {
-      propValue = COMPLEX_VALUE;
-      res = res.slice(0, res.indexOf(':'));
-    }
-    const minus = res.includes('-');
-    const plus = res.includes('+');
-    let comment = (owner.length > 0) ? `${owner}.${key[0]}` : `${key[0]}`;
-    comment = ` '${comment}' `;
+    const tempObjVal = getObjValue(strArr, key);
+    const tempVal = getValue(tempObjVal);
+    const propValue = tempVal.includes('{') ? COMPLEX_VALUE : tempVal;
+    const propValue1 = findAnotherPropValue(strArr, key, tempVal, keys);
+    const objValue = tempVal.includes('{') ? tempObjVal.slice(0, tempObjVal.indexOf(':')) : tempObjVal;
+    const minus = objValue.includes('-');
+    const plus = objValue.includes('+');
+    obj.comment = (owner.length > 0) ? `${owner}.${key[0]}` : `${key[0]}`;
+    obj.comment = ` '${obj.comment}' `;
     if (plus && propValue === propValue1) {
-      comment += setAdded(propValue);
-      out += `${PROP}${comment}\n`;
+      obj.comment += setAdded(propValue);
+      obj.out += `${PROP}${obj.comment}\n`;
     }
     if (minus) {
       if (propValue === propValue1) {
-        comment += REMOVED;
+        obj.comment += REMOVED;
       } else {
-        comment += setUpdated(propValue, propValue1);
+        obj.comment += setUpdated(propValue, propValue1);
       }
-      out += `${PROP}${comment}\n`;
+      obj.out += `${PROP}${obj.comment}\n`;
     }
     if (!(minus || plus) && propValue === COMPLEX_VALUE) {
-      out += getPropValues(strArr, key[1], owner);
+      obj.out += getPropValues(strArr, key[1], owner);
     }
   });
-  return out;
+  return obj.out;
 };
 
 export default (source) => {
   const strArr = source.split('\n');
   const out = getPropValues(strArr, 0, '');
+  // удаляем последний символ конца строки
+  // будет добавлен в gendiff.js
   return out.slice(0, out.length - 1);
 };

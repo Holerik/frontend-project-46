@@ -43,14 +43,16 @@ const selectData = (data, objKey, parentKey) => {
     return data;
   }
   const objs = data[4].filter((item) => checkItem(item));
-  for (let index = 0; index < objs.length; index += 1) {
-    const res = selectData(objs[index], objKey, parentKey);
-    if (objKey === res[1] && res[0].includes(parentKey)) {
-      return res;
-    }
+  const out = { info: [] };
+  const index = objs.findIndex((obj) => {
+    out.info = selectData(obj, objKey, parentKey);
+    return objKey === out.info[1] && out.info[0].includes(parentKey);
+  });
+  if (index === -1) {
+    // Данные не найдены
+    return [OBJ_IDENT, '', 0, flags.FIRST, []];
   }
-  // Данные не найдены
-  return [OBJ_IDENT, '', 0, flags.FIRST, []];
+  return out.info;
 };
 
 const setAllSubItems = (obj, flag) => {
@@ -94,13 +96,13 @@ const genDifferenceArray = (buf1, buf2, level, flag) => {
 // Строки, полученные из массива полей
 const genDifferenceString = (buf1, buf2, level, flag) => {
   const arr = genDifferenceArray(buf1, buf2, level, flag);
-  let diff = '';
+  const info = { diff: '' };
   arr.forEach((item) => {
     const str = item[1] === '' ? `${item[0]}: \n`
       : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
-    diff += str.padStart(str.length + 4 * level + 2, ' ');
+    info.diff += str.padStart(str.length + 4 * level + 2, ' ');
   });
-  return diff;
+  return info.diff;
 };
 
 // Получение результатов сравнения даанных
@@ -110,7 +112,8 @@ const genDifference = (data1, data2) => {
   const objs2 = data2[4].filter((item) => checkItem(item));
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
-  let res = genDifferenceString(obj1, obj2, data1[2], data1[3]);
+  const str = { diff: '' };
+  str.diff = genDifferenceString(obj1, obj2, data1[2], data1[3]);
   objs1.forEach((item) => {
     const obj = selectData(data2, item[1], item[0]);
     if (obj[0] !== OBJ_IDENT) {
@@ -120,7 +123,7 @@ const genDifference = (data1, data2) => {
     } else if (item[3] === flags.FIRST) {
       setAllSubItems(item, flags.NONE);
     }
-    res += genDifference(item, obj);
+    str.diff += genDifference(item, obj);
   });
   objs2.forEach((item) => {
     const obj = selectData(data1, item[1], item[0]);
@@ -128,32 +131,28 @@ const genDifference = (data1, data2) => {
       // eslint-disable-next-line no-param-reassign
       item[3] = flags.SECOND;
       setAllSubItems(item, flags.NONE);
-      res += genDifference(item, obj);
+      str.diff += genDifference(item, obj);
     }
   });
   const start = '{\n';
-  let diff = start.padStart(start.length + 2 * data1[2], ' ');
+  const res = { diff: start.padStart(start.length + 2 * data1[2], ' ') };
   if (data1[1] !== OBJ_ROOT) {
-    let mod = '';
-    switch (data1[3]) {
-      case flags.FIRST: mod = '-';
-        break;
-      case flags.SECOND: mod = '+';
-        break;
-      default:
-        break;
-    }
-    const str = Object.keys(objs2).length === 0 ? `${mod} ${data1[1]}` : data1[1];
-    diff = `${str.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`;
+    const mod = {
+      [flags.NONE]: '',
+      [flags.BOTH]: '',
+      [flags.FIRST]: '-',
+      [flags.SECOND]: '+',
+    };
+    const temp = Object.keys(objs2).length === 0 ? `${mod[data1[3]]} ${data1[1]}` : data1[1];
+    res.diff = `${temp.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`;
   }
-  diff += res;
+  res.diff += str.diff;
   const fin = `${data1[1] !== OBJ_ROOT ? '  ' : ''}}\n`;
-  diff += fin.padStart(fin.length + 4 * data1[2] - 2, ' ');
-  return diff;
+  res.diff += fin.padStart(fin.length + 4 * data1[2] - 2, ' ');
+  return res.diff;
 };
 
 export default (file1, file2, style) => {
-  let strOut = 'error: mixed file types';
   const ext1 = path.extname(file1).slice(1);
   const ext2 = path.extname(file2).slice(1);
   if (ext1 === ext2) {
@@ -164,11 +163,9 @@ export default (file1, file2, style) => {
       const data2 = [OBJ_IDENT, OBJ_ROOT, 0, flags.DOTH];
       genData(obj1.buffer, data1, 1, flags.FIRST);
       genData(obj2.buffer, data2, 1, flags.SECOND);
-      strOut = formatter(genDifference(data1, data2), file1, file2, style);
-    } else {
-      strOut = obj1.res.length > 0 ? obj1.res : obj2.res;
+      return formatter(genDifference(data1, data2), file1, file2, style);
     }
+    return obj1.res.length > 0 ? obj1.res : obj2.res;
   }
-  console.log(strOut);
-  return strOut;
+  return 'error: mixed file types';
 };

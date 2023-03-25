@@ -7,7 +7,7 @@ import compare from './gen-difference.js';
 
 const genDiff = (file1, file2, options) => {
   const style = _.has(options, 'format') ? options.format : 'stylish';
-  return compare(file1, file2, style);
+  console.log(`${compare(file1, file2, style)}\n`);
 };
 
 function compareFiles() {

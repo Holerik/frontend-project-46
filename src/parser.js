@@ -36,21 +36,10 @@ const parser = {
 
 export default (type, file) => {
   const obj = {};
-  let fileParser;
-  switch (type) {
-    case 'json':
-      fileParser = parser.json;
-      break;
-    case 'yml':
-      fileParser = parser.yml;
-      break;
-    default:
-      break;
-  }
-  if (fileParser) {
+  if (Object.hasOwn(parser, type)) {
     const fd = tryOpenFile(file);
     if (fd !== 0) {
-      obj.buffer = fileParser(fs.readFileSync(fd), { encoding: 'utf8', flag: 'r' });
+      obj.buffer = parser[type](fs.readFileSync(fd), { encoding: 'utf8', flag: 'r' });
       obj.res = '';
       fs.closeSync(fd);
     } else {
