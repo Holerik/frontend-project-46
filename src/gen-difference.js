@@ -26,12 +26,12 @@ const genData = (obj, data, level = 0, flag = flags.FIRST) => {
     if (obj[key] !== null && typeof obj[key] === 'object') {
       const data1 = [OBJ_IDENT + data[1], key, level, flag];
       values.push(data1);
-      genData(obj[key], data1, level + 1, flag);
+      data1.push(genData(obj[key], data1, level + 1, flag));
     } else {
       values.push([key, obj[key]]);
     }
   });
-  data.push(values);
+  return values;
 };
 
 // Элемент структуры содержит свойства объекта
@@ -43,16 +43,15 @@ const selectData = (data, objKey, parentKey) => {
     return data;
   }
   const objs = data[4].filter((item) => checkItem(item));
-  const out = { info: [] };
   const index = objs.findIndex((obj) => {
-    out.info = selectData(obj, objKey, parentKey);
-    return objKey === out.info[1] && out.info[0].includes(parentKey);
+    const info = selectData(obj, objKey, parentKey);
+    return objKey === info[1] && info[0].includes(parentKey);
   });
   if (index === -1) {
     // Данные не найдены
     return [OBJ_IDENT, '', 0, flags.FIRST, []];
   }
-  return out.info;
+  return objs[index];
 };
 
 const setAllSubItems = (obj, flag) => {
@@ -112,8 +111,8 @@ const genDifference = (data1, data2) => {
   const objs2 = data2[4].filter((item) => checkItem(item));
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
-  const str = { diff: '' };
-  str.diff = genDifferenceString(obj1, obj2, data1[2], data1[3]);
+  const str1 = [];
+  str1.push(genDifferenceString(obj1, obj2, data1[2], data1[3]));
   objs1.forEach((item) => {
     const obj = selectData(data2, item[1], item[0]);
     if (obj[0] !== OBJ_IDENT) {
@@ -123,7 +122,7 @@ const genDifference = (data1, data2) => {
     } else if (item[3] === flags.FIRST) {
       setAllSubItems(item, flags.NONE);
     }
-    str.diff += genDifference(item, obj);
+    str1.push(genDifference(item, obj));
   });
   objs2.forEach((item) => {
     const obj = selectData(data1, item[1], item[0]);
@@ -131,11 +130,11 @@ const genDifference = (data1, data2) => {
       // eslint-disable-next-line no-param-reassign
       item[3] = flags.SECOND;
       setAllSubItems(item, flags.NONE);
-      str.diff += genDifference(item, obj);
+      str1.push(genDifference(item, obj));
     }
   });
   const start = '{\n';
-  const res = { diff: start.padStart(start.length + 2 * data1[2], ' ') };
+  const res1 = [start.padStart(start.length + 2 * data1[2], ' ')];
   if (data1[1] !== OBJ_ROOT) {
     const mod = {
       [flags.NONE]: '',
@@ -144,12 +143,13 @@ const genDifference = (data1, data2) => {
       [flags.SECOND]: '+',
     };
     const temp = Object.keys(objs2).length === 0 ? `${mod[data1[3]]} ${data1[1]}` : data1[1];
-    res.diff = `${temp.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`;
+    res1.pop();
+    res1.push(`${temp.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`);
   }
-  res.diff += str.diff;
+  const out = res1.concat(str1);
   const fin = `${data1[1] !== OBJ_ROOT ? '  ' : ''}}\n`;
-  res.diff += fin.padStart(fin.length + 4 * data1[2] - 2, ' ');
-  return res.diff;
+  out.push(fin.padStart(fin.length + 4 * data1[2] - 2, ' '));
+  return out.join('');
 };
 
 export default (file1, file2, style) => {
@@ -161,8 +161,8 @@ export default (file1, file2, style) => {
     if (obj1.res === '' && obj2.res === '') {
       const data1 = [OBJ_IDENT, OBJ_ROOT, 0, flags.BOTH];
       const data2 = [OBJ_IDENT, OBJ_ROOT, 0, flags.DOTH];
-      genData(obj1.buffer, data1, 1, flags.FIRST);
-      genData(obj2.buffer, data2, 1, flags.SECOND);
+      data1.push(genData(obj1.buffer, data1, 1, flags.FIRST));
+      data2.push(genData(obj2.buffer, data2, 1, flags.SECOND));
       return formatter(genDifference(data1, data2), file1, file2, style);
     }
     return obj1.res.length > 0 ? obj1.res : obj2.res;

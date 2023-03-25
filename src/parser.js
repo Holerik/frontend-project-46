@@ -35,20 +35,26 @@ const parser = {
 };
 
 export default (type, file) => {
-  const obj = {};
+  // const obj = {};
   if (Object.hasOwn(parser, type)) {
     const fd = tryOpenFile(file);
     if (fd !== 0) {
-      obj.buffer = parser[type](fs.readFileSync(fd), { encoding: 'utf8', flag: 'r' });
-      obj.res = '';
+      const obj = {
+        buffer: parser[type](fs.readFileSync(fd), { encoding: 'utf8', flag: 'r' }),
+        res: '',
+      };
       fs.closeSync(fd);
-    } else {
-      obj.res = `file ${file}: open error`;
+      return obj;
     }
-  } else {
-    obj.res = `error: no parser for file type ${type}`;
+    return {
+      buffer: '',
+      res: `file ${file}: open error`,
+    };
   }
-  return obj;
+  return {
+    buffer: '',
+    res: `error: no parser for file type ${type}`,
+  };
 };
 
 export { getFilePath };

@@ -49,10 +49,7 @@ const findAnotherPropValue = (strArr, key, propValue, keys) => {
 };
 
 const getPropValues = (strArr, ind, parent) => {
-  const obj = {
-    out: '',
-    comment: '',
-  };
+  const out = [];
   const tempOwner = getPropName(strArr[ind]);
   const owner = parent.length > 0 ? `${parent}.${tempOwner}` : tempOwner;
   const keys = getSortedObjKeys(strArr, ind);
@@ -64,25 +61,22 @@ const getPropValues = (strArr, ind, parent) => {
     const objValue = tempVal.includes('{') ? tempObjVal.slice(0, tempObjVal.indexOf(':')) : tempObjVal;
     const minus = objValue.includes('-');
     const plus = objValue.includes('+');
-    obj.comment = (owner.length > 0) ? `${owner}.${key[0]}` : `${key[0]}`;
-    obj.comment = ` '${obj.comment}' `;
+    const header = (owner.length > 0) ? ` '${owner}.${key[0]}' ` : ` '${key[0]}' `;
     if (plus && propValue === propValue1) {
-      obj.comment += setAdded(propValue);
-      obj.out += `${PROP}${obj.comment}\n`;
+      out.push(`${PROP}${header}${setAdded(propValue)}\n`);
     }
     if (minus) {
       if (propValue === propValue1) {
-        obj.comment += REMOVED;
+        out.push(`${PROP}${header}${REMOVED}\n`);
       } else {
-        obj.comment += setUpdated(propValue, propValue1);
+        out.push(`${PROP}${header}${setUpdated(propValue, propValue1)}\n`);
       }
-      obj.out += `${PROP}${obj.comment}\n`;
     }
     if (!(minus || plus) && propValue === COMPLEX_VALUE) {
-      obj.out += getPropValues(strArr, key[1], owner);
+      out.push(getPropValues(strArr, key[1], owner));
     }
   });
-  return obj.out;
+  return out.join('');
 };
 
 export default (source) => {
