@@ -11,20 +11,17 @@ const getPropName = (str) => {
 
 // Определение индекса строки для следующего свойства,
 // если текущее свойство оказалось объектом
-const skipInternalObjectProps = (content, pos) => {
-  const temp = {
-    ind: pos,
-    counter: 0,
-  };
-  do {
-    if (content[temp.ind].includes('{')) {
-      temp.counter += 1;
-    } else if (content[temp.ind].includes('}')) {
-      temp.counter -= 1;
-    }
-  // eslint-disable-next-line no-plusplus
-  } while (temp.counter > 0 && temp.ind++);
-  return temp.ind;
+const skipInternalObjectProps = (strArr, counter, pos, flag = false) => {
+  if (counter === 0 && flag) {
+    return pos - 1;
+  }
+  if (strArr[pos].includes('{')) {
+    return skipInternalObjectProps(strArr, counter + 1, pos + 1, true);
+  }
+  if (counter > 0 && strArr[pos].includes('}')) {
+    return skipInternalObjectProps(strArr, counter - 1, pos + 1, true);
+  }
+  return skipInternalObjectProps(strArr, counter, pos + 1, true);
 };
 
 // получение ключей свойств объекта, описание которого
@@ -32,7 +29,7 @@ const skipInternalObjectProps = (content, pos) => {
 const getSortedObjKeys = (strArr, startPos, pos = 0) => {
   const keys = [];
   keys.push([getPropName(strArr[startPos + 1]), startPos + 1, pos]);
-  const finalPos = skipInternalObjectProps(strArr, startPos + 1);
+  const finalPos = skipInternalObjectProps(strArr, 0, startPos + 1, false);
   if (!strArr[finalPos + 1].includes('}')) {
     const keys1 = getSortedObjKeys(strArr, finalPos, pos);
     keys1.forEach((key) => keys.push(key));
@@ -53,25 +50,26 @@ const getSortedObjKeys = (strArr, startPos, pos = 0) => {
 const getObjValue = (strArr, key) => {
   const ind = key[1];
   const str = strArr[ind];
-  const out = { res: `${str}\n` };
+  const res = `${str}\n`;
   if (str.includes('{')) {
     const keys = getSortedObjKeys(strArr, ind, ind);
     const blanks = str.lastIndexOf(' ', str.length - 3);
     // eslint-disable-next-line no-use-before-define
-    out.res += getAssemblyObject(strArr, keys);
-    out.res += '}\n'.padStart(blanks + 3);
+    return `${res}${getAssemblyObject(strArr, keys)}${'}\n'.padStart(blanks + 3)}`;
   }
-  return out.res;
+  return res;
+};
+
+const sumKeys = (strArr, sum, keys, index) => {
+  if (index === keys.length) {
+    return sum;
+  }
+  const key = keys[index];
+  return sumKeys(strArr, `${sum}${getObjValue(strArr, key)}`, keys, index + 1);
 };
 
 // Сборка объекта
-const getAssemblyObject = (strArr, keys) => {
-  const out = { ass: '' };
-  keys.forEach((key) => {
-    out.ass += getObjValue(strArr, key);
-  });
-  return out.ass;
-};
+const getAssemblyObject = (strArr, keys) => sumKeys(strArr, '', keys, 0);
 
 export default (source) => {
   const strArr = source.split('\n');

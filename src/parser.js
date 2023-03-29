@@ -19,12 +19,14 @@ const openFile = (fname) => {
 };
 
 const tryOpenFile = (fname) => {
-  let fd = openFile(fname);
+  const fd = openFile(fname);
   if (fd === 0) {
-    fd = openFile(getFilePath(fname));
-  }
-  if (fd === 0) {
-    fd = openFile(getFixturePath(fname));
+    const fd1 = openFile(getFilePath(fname));
+    if (fd1 === 0) {
+      const fd2 = openFile(getFixturePath(fname));
+      return fd2;
+    }
+    return fd1;
   }
   return fd;
 };
@@ -35,7 +37,6 @@ const parser = {
 };
 
 export default (type, file) => {
-  // const obj = {};
   if (Object.hasOwn(parser, type)) {
     const fd = tryOpenFile(file);
     if (fd !== 0) {

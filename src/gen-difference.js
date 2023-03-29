@@ -7,16 +7,19 @@ import path from 'node:path';
 import parseFile from './parser.js';
 import formatter from '../formatters/index.js';
 
-const createEnum = (values) => {
-  const enumObject = {};
-  // eslint-disable-next-line no-return-assign
-  values.forEach((val) => enumObject[val] = Symbol(val));
+const createEnum = () => {
+  const enumObject = {
+    BOTH: 'BOTH',
+    FIRST: 'FIRST',
+    SECOND: 'SECOND',
+    NONE: 'NONE',
+  };
   return Object.freeze(enumObject);
 };
 
 const OBJ_IDENT = '#__';
 const OBJ_ROOT = 'root';
-const flags = createEnum(['BOTH', 'FIRST', 'SECOND', 'NONE']);
+const flags = createEnum();
 
 // Преобразование содержимого объекта в структуру для дальнейшей обработки
 const genData = (obj, data, level = 0, flag = flags.FIRST) => {
@@ -72,7 +75,7 @@ const getDiffArr = (keys, flag, predicat, buffer) => {
 };
 
 // Массив полей, содержащий результаты сравнения полей простых объектов
-const genDifferenceArray = (buf1, buf2, level, flag) => {
+const genDifferenceArray = (buf1, buf2, flag) => {
   const keys1 = Object.keys(buf1);
   const keys2 = Object.keys(buf2);
   // ключи, отсутствующие в 1 файле идут с +
@@ -92,16 +95,20 @@ const genDifferenceArray = (buf1, buf2, level, flag) => {
   return arr;
 };
 
+const sumItems = (items, level, sum = '', index = 0) => {
+  if (index === items.length) {
+    return sum;
+  }
+  const item = items[index];
+  const str = item[1] === '' ? `${item[0]}: \n`
+    : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
+  return sumItems(items, level, `${sum}${str.padStart(str.length + 4 * level + 2, ' ')}`, index + 1);
+};
+
 // Строки, полученные из массива полей
 const genDifferenceString = (buf1, buf2, level, flag) => {
-  const arr = genDifferenceArray(buf1, buf2, level, flag);
-  const info = { diff: '' };
-  arr.forEach((item) => {
-    const str = item[1] === '' ? `${item[0]}: \n`
-      : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
-    info.diff += str.padStart(str.length + 4 * level + 2, ' ');
-  });
-  return info.diff;
+  const arr = genDifferenceArray(buf1, buf2, flag);
+  return sumItems(arr, level);
 };
 
 // Получение результатов сравнения даанных

@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>171/171</span>
+                <span class='fraction'>178/178</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>56/56</span>
+                <span class='fraction'>57/57</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>171/171</span>
+                <span class='fraction'>178/178</span>
             </div>
         
             
@@ -234,7 +234,17 @@
 <a name='L169'></a><a href='#L169'>169</a>
 <a name='L170'></a><a href='#L170'>170</a>
 <a name='L171'></a><a href='#L171'>171</a>
-<a name='L172'></a><a href='#L172'>172</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -329,13 +339,17 @@
 <span class="cline-any cline-yes">174x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">532x</span>
+<span class="cline-any cline-yes">174x</span>
+<span class="cline-any cline-yes">174x</span>
+<span class="cline-any cline-yes">358x</span>
+<span class="cline-any cline-yes">532x</span>
+<span class="cline-any cline-yes">532x</span>
+<span class="cline-any cline-yes">532x</span>
+<span class="cline-any cline-yes">532x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">174x</span>
-<span class="cline-any cline-yes">174x</span>
-<span class="cline-any cline-yes">174x</span>
-<span class="cline-any cline-yes">358x</span>
-<span class="cline-any cline-yes">358x</span>
-<span class="cline-any cline-yes">358x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">174x</span>
 <span class="cline-any cline-yes">174x</span>
 <span class="cline-any cline-yes">174x</span>
@@ -414,16 +428,19 @@ import path from 'node:path';
 import parseFile from './parser.js';
 import formatter from '../formatters/index.js';
 &nbsp;
-const createEnum = (values) =&gt; {
-  const enumObject = {};
-  // eslint-disable-next-line no-return-assign
-  values.forEach((val) =&gt; enumObject[val] = Symbol(val));
+const createEnum = () =&gt; {
+  const enumObject = {
+    BOTH: 'BOTH',
+    FIRST: 'FIRST',
+    SECOND: 'SECOND',
+    NONE: 'NONE',
+  };
   return Object.freeze(enumObject);
 };
 &nbsp;
 const OBJ_IDENT = '#__';
 const OBJ_ROOT = 'root';
-const flags = createEnum(['BOTH', 'FIRST', 'SECOND', 'NONE']);
+const flags = createEnum();
 &nbsp;
 // Преобразование содержимого объекта в структуру для дальнейшей обработки
 const genData = (obj, data, level = 0, flag = flags.FIRST) =&gt; {
@@ -479,7 +496,7 @@ const getDiffArr = (keys, flag, predicat, buffer) =&gt; {
 };
 &nbsp;
 // Массив полей, содержащий результаты сравнения полей простых объектов
-const genDifferenceArray = (buf1, buf2, level, flag) =&gt; {
+const genDifferenceArray = (buf1, buf2, flag) =&gt; {
   const keys1 = Object.keys(buf1);
   const keys2 = Object.keys(buf2);
   // ключи, отсутствующие в 1 файле идут с +
@@ -499,16 +516,20 @@ const genDifferenceArray = (buf1, buf2, level, flag) =&gt; {
   return arr;
 };
 &nbsp;
+const sumItems = (items, level, sum = '', index = 0) =&gt; {
+  if (index === items.length) {
+    return sum;
+  }
+  const item = items[index];
+  const str = item[1] === '' ? `${item[0]}: \n`
+    : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
+  return sumItems(items, level, `${sum}${str.padStart(str.length + 4 * level + 2, ' ')}`, index + 1);
+};
+&nbsp;
 // Строки, полученные из массива полей
 const genDifferenceString = (buf1, buf2, level, flag) =&gt; {
-  const arr = genDifferenceArray(buf1, buf2, level, flag);
-  const info = { diff: '' };
-  arr.forEach((item) =&gt; {
-    const str = item[1] === '' ? `${item[0]}: \n`
-      : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
-    info.diff += str.padStart(str.length + 4 * level + 2, ' ');
-  });
-  return info.diff;
+  const arr = genDifferenceArray(buf1, buf2, flag);
+  return sumItems(arr, level);
 };
 &nbsp;
 // Получение результатов сравнения даанных
@@ -583,7 +604,7 @@ export default (file1, file2, style) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2023-03-25T15:34:46.328Z
+                at 2023-03-29T16:52:30.351Z
             </div>
         <script src="../prettify.js"></script>
         <script>
