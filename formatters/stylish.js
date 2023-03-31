@@ -2,6 +2,8 @@
 // Функции для обработки результатов сравнения и
 // представления их в структурированном и отсортированном виде
 
+import fp from 'lodash/fp.js';
+
 // Выделение имени свойста или объекта из строки
 const getPropName = (str) => {
   const semiColInd = str.indexOf(':');
@@ -24,26 +26,28 @@ const skipInternalObjectProps = (strArr, counter, pos, flag = false) => {
   return skipInternalObjectProps(strArr, counter, pos + 1, true);
 };
 
+const getSorted = (strArr, array) => array.sort(
+  (item1, item2) => {
+    if (item1[0] === item2[0]) {
+      const v1 = strArr[item1[1]].includes('-') ? -1 : 0;
+      const v2 = strArr[item2[1]].includes('-') ? 1 : 0;
+      return v1 + v2;
+    }
+    return item1[0].localeCompare(item2[0]);
+  },
+);
+
 // получение ключей свойств объекта, описание которого
 // содержится в массиве strArr, начиная с позиции startPos
 const getSortedObjKeys = (strArr, startPos, pos = 0) => {
-  const keys = [];
-  keys.push([getPropName(strArr[startPos + 1]), startPos + 1, pos]);
+  // const keys = [];
+  // keys.push([getPropName(strArr[startPos + 1]), startPos + 1, pos]);
+  const keys = fp.concat([])([[getPropName(strArr[startPos + 1]), startPos + 1, pos]]);
   const finalPos = skipInternalObjectProps(strArr, 0, startPos + 1, false);
   if (!strArr[finalPos + 1].includes('}')) {
-    const keys1 = getSortedObjKeys(strArr, finalPos, pos);
-    keys1.forEach((key) => keys.push(key));
+    return getSorted(strArr, fp.concat(keys)(getSortedObjKeys(strArr, finalPos, pos)));
   }
-  return keys.sort(
-    (item1, item2) => {
-      if (item1[0] === item2[0]) {
-        const v1 = strArr[item1[1]].includes('-') ? -1 : 0;
-        const v2 = strArr[item2[1]].includes('-') ? 1 : 0;
-        return v1 + v2;
-      }
-      return item1[0].localeCompare(item2[0]);
-    },
-  );
+  return getSorted(strArr, keys);
 };
 
 // Выделение объекта с подобъектами по его имени
