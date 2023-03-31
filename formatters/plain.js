@@ -9,15 +9,15 @@ const COMPLEX_VALUE = '[complex value]';
 const PROP = 'Property';
 const REMOVED = 'was removed';
 
+const whithoutQuotas = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
+
 const setAdded = (value) => {
   const out = 'was added with value: ';
   if (value === COMPLEX_VALUE) {
     return `${out}${COMPLEX_VALUE}`;
   }
-  return `${out}${TEST_CHARS.includes(value) ? `${value}` : `'${value}'`}`;
+  return `${out}${whithoutQuotas(value) ? `${value}` : `'${value}'`}`;
 };
-
-const whithoutQuotas = (str) => TEST_CHARS.includes(str) || !_.isNaN(_.parseInt(str));
 
 const getOut = (value) => {
   if (value.length === 0) {
@@ -48,35 +48,52 @@ const findAnotherPropValue = (strArr, key, propValue, keys) => {
   return modifyValue(res);
 };
 
+const addPropValue = (strArr, keys, owner, out, index) => {
+  if (index === keys.length) {
+    return out;
+  }
+  const tempObjVal = getObjValue(strArr, keys[index]);
+  const tempVal = getValue(tempObjVal);
+  const propValue = tempVal.includes('{') ? COMPLEX_VALUE : tempVal;
+  const propValue1 = findAnotherPropValue(strArr, keys[index], tempVal, keys);
+  const objValue = tempVal.includes('{') ? tempObjVal.slice(0, tempObjVal.indexOf(':')) : tempObjVal;
+  const minus = objValue.includes('-');
+  const plus = objValue.includes('+');
+  const header = (owner.length > 0) ? ` '${owner}.${keys[index][0]}' ` : ` '${keys[index][0]}' `;
+
+  if (plus && propValue === propValue1) {
+    return addPropValue(strArr, keys, owner, `${out}${PROP}${header}${setAdded(propValue)}\n`, index + 1);
+  }
+  if (minus) {
+    if (propValue === propValue1) {
+      return addPropValue(strArr, keys, owner, `${out}${PROP}${header}${REMOVED}\n`, index + 1);
+    }
+    return addPropValue(
+      strArr,
+      keys,
+      owner,
+      `${out}${PROP}${header}${setUpdated(propValue, propValue1)}\n`,
+      index + 1,
+    );
+  }
+  if (!(minus || plus) && propValue === COMPLEX_VALUE) {
+    return addPropValue(
+      strArr,
+      keys,
+      owner,
+      // eslint-disable-next-line no-use-before-define
+      `${out}${getPropValues(strArr, keys[index][1], owner)}`,
+      index + 1,
+    );
+  }
+  return addPropValue(strArr, keys, owner, `${out}`, index + 1);
+};
+
 const getPropValues = (strArr, ind, parent) => {
-  const out = [];
   const tempOwner = getPropName(strArr[ind]);
   const owner = parent.length > 0 ? `${parent}.${tempOwner}` : tempOwner;
   const keys = getSortedObjKeys(strArr, ind);
-  keys.forEach((key) => {
-    const tempObjVal = getObjValue(strArr, key);
-    const tempVal = getValue(tempObjVal);
-    const propValue = tempVal.includes('{') ? COMPLEX_VALUE : tempVal;
-    const propValue1 = findAnotherPropValue(strArr, key, tempVal, keys);
-    const objValue = tempVal.includes('{') ? tempObjVal.slice(0, tempObjVal.indexOf(':')) : tempObjVal;
-    const minus = objValue.includes('-');
-    const plus = objValue.includes('+');
-    const header = (owner.length > 0) ? ` '${owner}.${key[0]}' ` : ` '${key[0]}' `;
-    if (plus && propValue === propValue1) {
-      out.push(`${PROP}${header}${setAdded(propValue)}\n`);
-    }
-    if (minus) {
-      if (propValue === propValue1) {
-        out.push(`${PROP}${header}${REMOVED}\n`);
-      } else {
-        out.push(`${PROP}${header}${setUpdated(propValue, propValue1)}\n`);
-      }
-    }
-    if (!(minus || plus) && propValue === COMPLEX_VALUE) {
-      out.push(getPropValues(strArr, key[1], owner));
-    }
-  });
-  return out.join('');
+  return addPropValue(strArr, keys, owner, '', 0);
 };
 
 export default (source) => {
