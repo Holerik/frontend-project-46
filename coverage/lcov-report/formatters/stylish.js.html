@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>100/100</span>
+                <span class='fraction'>85/85</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>100/100</span>
+                <span class='fraction'>85/85</span>
             </div>
         
             
@@ -148,22 +148,7 @@
 <a name='L83'></a><a href='#L83'>83</a>
 <a name='L84'></a><a href='#L84'>84</a>
 <a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a>
-<a name='L88'></a><a href='#L88'>88</a>
-<a name='L89'></a><a href='#L89'>89</a>
-<a name='L90'></a><a href='#L90'>90</a>
-<a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a>
-<a name='L93'></a><a href='#L93'>93</a>
-<a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a>
-<a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a>
-<a name='L98'></a><a href='#L98'>98</a>
-<a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L86'></a><a href='#L86'>86</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -208,18 +193,6 @@
 <span class="cline-any cline-yes">1004x</span>
 <span class="cline-any cline-yes">1004x</span>
 <span class="cline-any cline-yes">1004x</span>
-<span class="cline-any cline-yes">1004x</span>
-<span class="cline-any cline-yes">1004x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
-<span class="cline-any cline-yes">680x</span>
 <span class="cline-any cline-yes">680x</span>
 <span class="cline-any cline-yes">680x</span>
 <span class="cline-any cline-yes">324x</span>
@@ -251,9 +224,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
@@ -295,7 +265,7 @@ const getSorted = (strArr, array) =&gt; array.sort(
   (item1, item2) =&gt; {
     if (item1[0] === item2[0]) {
       const v1 = strArr[item1[1]].includes('-') ? -1 : 0;
-      const v2 = strArr[item2[1]].includes('-') ? 1 : 0;
+      const v2 = strArr[item2[1]].includes('+') ? 0 : 1;
       return v1 + v2;
     }
     return item1[0].localeCompare(item2[0]);
@@ -305,21 +275,9 @@ const getSorted = (strArr, array) =&gt; array.sort(
 // получение ключей свойств объекта, описание которого
 // содержится в массиве strArr, начиная с позиции startPos
 const getSortedObjKeys = (strArr, startPos, pos = 0) =&gt; {
-  // const keys = [];
-  // keys.push([getPropName(strArr[startPos + 1]), startPos + 1, pos]);
   const keys = fp.concat([])([[getPropName(strArr[startPos + 1]), startPos + 1, pos]]);
   const finalPos = skipInternalObjectProps(strArr, 0, startPos + 1, false);
   if (!strArr[finalPos + 1].includes('}')) {
-    // const keys1 = getSortedObjKeys(strArr, finalPos, pos);
-    // keys1.forEach((key) =&gt; keys.push(key));
-    // return getSorted(strArr, keys);
-    /*
-    const clone = fp.cloneDeep(keys);
-    if (pos === 0) {
-      console.log('keys= ', keys);
-      console.log('keys12= ', fp.concat(clone)(getSortedObjKeys(strArr, finalPos, pos)));
-    }
-    */
     return getSorted(strArr, fp.concat(keys)(getSortedObjKeys(strArr, finalPos, pos)));
   }
   return getSorted(strArr, keys);
@@ -356,9 +314,6 @@ export default (source) =&gt; {
   const str = getAssemblyObject(strArr, keys);
   // без последнего символа конца строки
   // будет добавлен в gendiff.js
-  const arr1 = [1];
-  const arr2 = fp.concat(arr1)([2, 3]);
-  console.log('arr2= ', arr2);
   return `{\n${str}}`;
 };
 &nbsp;
@@ -370,7 +325,7 @@ export { getSortedObjKeys, getObjValue, getPropName };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2023-03-31T12:31:53.537Z
+                at 2023-03-31T17:28:54.299Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -30,7 +30,7 @@ const getSorted = (strArr, array) => array.sort(
   (item1, item2) => {
     if (item1[0] === item2[0]) {
       const v1 = strArr[item1[1]].includes('-') ? -1 : 0;
-      const v2 = strArr[item2[1]].includes('-') ? 1 : 0;
+      const v2 = strArr[item2[1]].includes('+') ? 0 : 1;
       return v1 + v2;
     }
     return item1[0].localeCompare(item2[0]);
@@ -40,8 +40,6 @@ const getSorted = (strArr, array) => array.sort(
 // получение ключей свойств объекта, описание которого
 // содержится в массиве strArr, начиная с позиции startPos
 const getSortedObjKeys = (strArr, startPos, pos = 0) => {
-  // const keys = [];
-  // keys.push([getPropName(strArr[startPos + 1]), startPos + 1, pos]);
   const keys = fp.concat([])([[getPropName(strArr[startPos + 1]), startPos + 1, pos]]);
   const finalPos = skipInternalObjectProps(strArr, 0, startPos + 1, false);
   if (!strArr[finalPos + 1].includes('}')) {

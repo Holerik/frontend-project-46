@@ -3,6 +3,7 @@
 // двух файлов данных в форматах JSON и YAML
 
 import _ from 'lodash';
+import fp from 'lodash/fp.js';
 import path from 'node:path';
 import parseFile from './parser.js';
 import formatter from '../formatters/index.js';
@@ -21,20 +22,34 @@ const OBJ_IDENT = '#__';
 const OBJ_ROOT = 'root';
 const flags = createEnum();
 
+const getElem = (obj, data, level, flag, key) => {
+  if (obj[key] !== null && typeof obj[key] === 'object') {
+    const data1 = [OBJ_IDENT + data[1], key, level, flag];
+    // eslint-disable-next-line no-use-before-define
+    return fp.concat(data1)([genData(obj[key], data1, level + 1, flag)]);
+  }
+  return [key, obj[key]];
+};
+
+const createData = (keys, obj, data, level, flag, index, res) => {
+  if (keys.length === index) {
+    return res;
+  }
+  return createData(
+    keys,
+    obj,
+    data,
+    level,
+    flag,
+    index + 1,
+    fp.concat(res)([getElem(obj, data, level, flag, keys[index])]),
+  );
+};
+
 // Преобразование содержимого объекта в структуру для дальнейшей обработки
 const genData = (obj, data, level = 0, flag = flags.FIRST) => {
   const keys = Object.keys(obj);
-  const values = [];
-  keys.forEach((key) => {
-    if (obj[key] !== null && typeof obj[key] === 'object') {
-      const data1 = [OBJ_IDENT + data[1], key, level, flag];
-      values.push(data1);
-      data1.push(genData(obj[key], data1, level + 1, flag));
-    } else {
-      values.push([key, obj[key]]);
-    }
-  });
-  return values;
+  return createData(keys, obj, data, level, flag, 0, []);
 };
 
 // Элемент структуры содержит свойства объекта
