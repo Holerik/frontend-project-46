@@ -81,12 +81,18 @@ const setAllSubItems = (obj, flag) => {
   });
 };
 
-const getDiffArr = (keys, flag, predicat, buffer) => {
-  const arr = [];
-  keys.forEach((key) => {
-    arr.push([`${flag === flags.BOTH ? predicat : ' '} ${key}`, buffer[key]]);
-  });
-  return arr;
+const getDiffArr = (keys, flag, predicat, buffer, index, arr) => {
+  if (index === keys.length) {
+    return arr;
+  }
+  return getDiffArr(
+    keys,
+    flag,
+    predicat,
+    buffer,
+    index + 1,
+    fp.concat(arr)([[`${flag === flags.BOTH ? predicat : ' '} ${keys[index]}`, buffer[keys[index]]]]),
+  );
 };
 
 // Массив полей, содержащий результаты сравнения полей простых объектов
@@ -97,7 +103,10 @@ const genDifferenceArray = (buf1, buf2, flag) => {
   const diff21 = _.difference(keys2, keys1);
   // ключи, отсутствующие во 2 файле идут с -
   const diff12 = _.difference(keys1, keys2);
-  const arr = _.concat(getDiffArr(diff12, flag, '-', buf1), getDiffArr(diff21, flag, '+', buf2));
+  const arr = _.concat(
+    getDiffArr(diff12, flag, '-', buf1, 0, []),
+    getDiffArr(diff21, flag, '+', buf2, 0, []),
+  );
   const inters = _.intersection(keys1, keys2);
   inters.forEach((key) => {
     if (buf1[key] === buf2[key]) {
@@ -110,20 +119,20 @@ const genDifferenceArray = (buf1, buf2, flag) => {
   return arr;
 };
 
-const sumItems = (items, level, sum = '', index = 0) => {
+const concatItems = (items, level, res = '', index = 0) => {
   if (index === items.length) {
-    return sum;
+    return res;
   }
   const item = items[index];
   const str = item[1] === '' ? `${item[0]}: \n`
     : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
-  return sumItems(items, level, `${sum}${str.padStart(str.length + 4 * level + 2, ' ')}`, index + 1);
+  return concatItems(items, level, `${res}${str.padStart(str.length + 4 * level + 2, ' ')}`, index + 1);
 };
 
 // Строки, полученные из массива полей
 const genDifferenceString = (buf1, buf2, level, flag) => {
   const arr = genDifferenceArray(buf1, buf2, flag);
-  return sumItems(arr, level);
+  return concatItems(arr, level);
 };
 
 // Получение результатов сравнения даанных
@@ -133,8 +142,7 @@ const genDifference = (data1, data2) => {
   const objs2 = data2[4].filter((item) => checkItem(item));
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
-  const str1 = [];
-  str1.push(genDifferenceString(obj1, obj2, data1[2], data1[3]));
+  const str1 = [genDifferenceString(obj1, obj2, data1[2], data1[3])];
   objs1.forEach((item) => {
     const obj = selectData(data2, item[1], item[0]);
     if (obj[0] !== OBJ_IDENT) {
@@ -155,22 +163,24 @@ const genDifference = (data1, data2) => {
       str1.push(genDifference(item, obj));
     }
   });
-  const start = '{\n';
-  const res1 = [start.padStart(start.length + 2 * data1[2], ' ')];
-  if (data1[1] !== OBJ_ROOT) {
+
+  const res = (data) => {
+    const start = '{\n';
     const mod = {
       [flags.NONE]: '',
       [flags.BOTH]: '',
       [flags.FIRST]: '-',
       [flags.SECOND]: '+',
     };
-    const temp = Object.keys(objs2).length === 0 ? `${mod[data1[3]]} ${data1[1]}` : data1[1];
-    res1.pop();
-    res1.push(`${temp.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`);
-  }
-  const out = res1.concat(str1);
+    if (data[1] === OBJ_ROOT) {
+      return [start.padStart(start.length + 2 * data[2], ' ')];
+    }
+    const temp = Object.keys(objs2).length === 0 ? `${mod[data[3]]} ${data[1]}` : data[1];
+    return [`${temp.padStart(data1[1].length + 4 * data1[2], ' ')}: ${start}`];
+  };
+
   const fin = `${data1[1] !== OBJ_ROOT ? '  ' : ''}}\n`;
-  out.push(fin.padStart(fin.length + 4 * data1[2] - 2, ' '));
+  const out = fp.concat(res(data1).concat(str1))(fin.padStart(fin.length + 4 * data1[2] - 2, ' '));
   return out.join('');
 };
 
@@ -181,10 +191,9 @@ export default (file1, file2, style) => {
     const obj1 = parseFile(ext1, file1);
     const obj2 = parseFile(ext2, file2);
     if (obj1.res === '' && obj2.res === '') {
-      const data1 = [OBJ_IDENT, OBJ_ROOT, 0, flags.BOTH];
-      const data2 = [OBJ_IDENT, OBJ_ROOT, 0, flags.DOTH];
-      data1.push(genData(obj1.buffer, data1, 1, flags.FIRST));
-      data2.push(genData(obj2.buffer, data2, 1, flags.SECOND));
+      const firstItem = [OBJ_IDENT, OBJ_ROOT, 0, flags.BOTH];
+      const data1 = fp.concat(firstItem)([genData(obj1.buffer, firstItem, 1, flags.FIRST)]);
+      const data2 = fp.concat(firstItem)([genData(obj2.buffer, firstItem, 1, flags.SECOND)]);
       return formatter(genDifference(data1, data2), file1, file2, style);
     }
     return obj1.res.length > 0 ? obj1.res : obj2.res;
