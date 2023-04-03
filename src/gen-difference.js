@@ -31,12 +31,12 @@ const getElem = (obj, data, level, flag, key) => {
   return [key, obj[key]];
 };
 
-const createData = (keys, obj, data, level, flag, index, res) => {
+const createData = (obj, data, level, flag, index, res) => {
+  const keys = Object.keys(obj);
   if (keys.length === index) {
     return res;
   }
   return createData(
-    keys,
     obj,
     data,
     level,
@@ -47,10 +47,12 @@ const createData = (keys, obj, data, level, flag, index, res) => {
 };
 
 // Преобразование содержимого объекта в структуру для дальнейшей обработки
-const genData = (obj, data, level = 0, flag = flags.FIRST) => {
-  const keys = Object.keys(obj);
-  return createData(keys, obj, data, level, flag, 0, []);
-};
+const genData = (
+  obj,
+  data,
+  level = 0,
+  flag = flags.FIRST,
+) => createData(obj, data, level, flag, 0, []);
 
 // Элемент структуры содержит свойства объекта
 const checkItem = (item) => (typeof item[0] === 'string') && item[0].includes(OBJ_IDENT);
@@ -72,15 +74,6 @@ const selectData = (data, objKey, parentKey) => {
   return objs[index];
 };
 
-const setAllSubItems = (obj, flag) => {
-  const items = obj[4].filter((item) => checkItem(item));
-  items.forEach((item) => {
-    // eslint-disable-next-line no-param-reassign
-    item[3] = flag;
-    setAllSubItems(item, flag);
-  });
-};
-
 const getDiffArr = (keys, flag, predicat, buffer, index, arr) => {
   if (index === keys.length) {
     return arr;
@@ -92,6 +85,26 @@ const getDiffArr = (keys, flag, predicat, buffer, index, arr) => {
     buffer,
     index + 1,
     fp.concat(arr)([[`${flag === flags.BOTH ? predicat : ' '} ${keys[index]}`, buffer[keys[index]]]]),
+  );
+};
+
+const getIntersElement = (buf1, buf2, key) => {
+  if (buf1[key] === buf2[key]) {
+    return [[`  ${key}`, buf1[key]]];
+  }
+  return [[`- ${key}`, buf1[key]], [`+ ${key}`, buf2[key]]];
+};
+
+const addIntersElements = (keys, buf1, buf2, index, arr) => {
+  if (index === keys.length) {
+    return arr;
+  }
+  return addIntersElements(
+    keys,
+    buf1,
+    buf2,
+    index + 1,
+    fp.concat(arr)(getIntersElement(buf1, buf2, keys[index])),
   );
 };
 
@@ -108,15 +121,7 @@ const genDifferenceArray = (buf1, buf2, flag) => {
     getDiffArr(diff21, flag, '+', buf2, 0, []),
   );
   const inters = _.intersection(keys1, keys2);
-  inters.forEach((key) => {
-    if (buf1[key] === buf2[key]) {
-      arr.push([`  ${key}`, buf1[key]]);
-    } else {
-      arr.push([`- ${key}`, buf1[key]]);
-      arr.push([`+ ${key}`, buf2[key]]);
-    }
-  });
-  return arr;
+  return addIntersElements(inters, buf1, buf2, 0, arr);
 };
 
 const concatItems = (items, level, res = '', index = 0) => {
@@ -126,7 +131,12 @@ const concatItems = (items, level, res = '', index = 0) => {
   const item = items[index];
   const str = item[1] === '' ? `${item[0]}: \n`
     : `${_.trimEnd(`${item[0]}: ${item[1]}`, ' ')}\n`;
-  return concatItems(items, level, `${res}${str.padStart(str.length + 4 * level + 2, ' ')}`, index + 1);
+  return concatItems(
+    items,
+    level,
+    `${res}${str.padStart(str.length + 4 * level + 2, ' ')}`,
+    index + 1,
+  );
 };
 
 // Строки, полученные из массива полей
@@ -135,32 +145,96 @@ const genDifferenceString = (buf1, buf2, level, flag) => {
   return concatItems(arr, level);
 };
 
+const getItemValue = (item, key, flag) => {
+  if (key < 3) {
+    return item[key];
+  }
+  if (key === 3) {
+    return flag;
+  }
+  return _.cloneDeep(item[4]);
+};
+
+// меняем флаг только у родительского объекта
+const getItemWhithNewFlag = (oldItem, newItem, key, flag) => {
+  if (key === 5) {
+    return newItem;
+  }
+  return getItemWhithNewFlag(
+    oldItem,
+    fp.concat(newItem)([getItemValue(oldItem, key, flag)]),
+    key + 1,
+    flag,
+  );
+};
+
+// /////////////////////////////////////////////////////////////
+const getItemValue1 = (item, key, flag) => {
+  if (key < 3) {
+    return item[key];
+  }
+  if (key === 3) {
+    return flag;
+  }
+  // eslint-disable-next-line no-use-before-define
+  return getAllItemValues(item[4], [], 0, flag);
+};
+
+// цикл по описаниям 'ключ-значние' родительского объекта
+const getAllItemValues = (oldItem, item, key, flag) => {
+  if (oldItem.length === key) {
+    return item;
+  }
+  const subItem = checkItem(oldItem[key])
+    // eslint-disable-next-line no-use-before-define
+    ? [getAllSubItemsWhithNewFlag(oldItem[key], [], 0, flag)] : [_.clone(oldItem[key])];
+  return getAllItemValues(oldItem, fp.concat(item)(subItem), key + 1, flag);
+};
+
+// меняем флаг у родительского объекта и всех дочерних, если такие есть
+// цикл по ключам родительского объекта
+const getAllSubItemsWhithNewFlag = (oldItem, newItem, key, flag) => {
+  if (key === 5) {
+    return newItem;
+  }
+  return getAllSubItemsWhithNewFlag(
+    oldItem,
+    fp.concat(newItem)([getItemValue1(oldItem, key, flag)]),
+    key + 1,
+    flag,
+  );
+};
+
 // Получение результатов сравнения даанных
 // в неотсортированном виде
 const genDifference = (data1, data2) => {
+  // списки объектов
   const objs1 = data1[4].filter((item) => checkItem(item));
   const objs2 = data2[4].filter((item) => checkItem(item));
+  // списки пара 'ключ: величина'
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
   const str1 = [genDifferenceString(obj1, obj2, data1[2], data1[3])];
   objs1.forEach((item) => {
     const obj = selectData(data2, item[1], item[0]);
     if (obj[0] !== OBJ_IDENT) {
-      // eslint-disable-next-line no-param-reassign
-      item[3] = flags.BOTH;
-      obj[3] = flags.BOTH;
+      const newItem = getItemWhithNewFlag(item, [], 0, flags.BOTH);
+      const newObj = getItemWhithNewFlag(obj, [], 0, flags.BOTH);
+      str1.push(genDifference(newItem, newObj));
     } else if (item[3] === flags.FIRST) {
-      setAllSubItems(item, flags.NONE);
+      const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
+      const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.FIRST);
+      str1.push(genDifference(newItem, obj));
+    } else {
+      str1.push(genDifference(item, obj));
     }
-    str1.push(genDifference(item, obj));
   });
   objs2.forEach((item) => {
     const obj = selectData(data1, item[1], item[0]);
     if (obj[0] === OBJ_IDENT) {
-      // eslint-disable-next-line no-param-reassign
-      item[3] = flags.SECOND;
-      setAllSubItems(item, flags.NONE);
-      str1.push(genDifference(item, obj));
+      const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
+      const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.SECOND);
+      str1.push(genDifference(newItem, obj));
     }
   });
 
