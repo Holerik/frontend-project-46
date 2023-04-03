@@ -145,6 +145,7 @@ const genDifferenceString = (buf1, buf2, level, flag) => {
   return concatItems(arr, level);
 };
 
+// получаем родительский объект с новым флагом
 const getItemValue = (item, key, flag) => {
   if (key < 3) {
     return item[key];
@@ -156,6 +157,7 @@ const getItemValue = (item, key, flag) => {
 };
 
 // меняем флаг только у родительского объекта
+// цикл по ключам родительского объекта
 const getItemWhithNewFlag = (oldItem, newItem, key, flag) => {
   if (key === 5) {
     return newItem;
@@ -168,7 +170,7 @@ const getItemWhithNewFlag = (oldItem, newItem, key, flag) => {
   );
 };
 
-// /////////////////////////////////////////////////////////////
+// получаем родительский объект и все дочерние с новым флагом
 const getItemValue1 = (item, key, flag) => {
   if (key < 3) {
     return item[key];
@@ -180,7 +182,7 @@ const getItemValue1 = (item, key, flag) => {
   return getAllItemValues(item[4], [], 0, flag);
 };
 
-// цикл по описаниям 'ключ-значние' родительского объекта
+// цикл по описаниям 'ключ: значние' родительского объекта
 const getAllItemValues = (oldItem, item, key, flag) => {
   if (oldItem.length === key) {
     return item;
@@ -211,7 +213,7 @@ const genDifference = (data1, data2) => {
   // списки объектов
   const objs1 = data1[4].filter((item) => checkItem(item));
   const objs2 = data2[4].filter((item) => checkItem(item));
-  // списки пара 'ключ: величина'
+  // списки пара 'ключ: значение'
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
   const str1 = [genDifferenceString(obj1, obj2, data1[2], data1[3])];

@@ -3,6 +3,7 @@
 // представления их в структурированном и отсортированном виде
 
 import fp from 'lodash/fp.js';
+import sort from 'immutable-sort';
 
 // Выделение имени свойста или объекта из строки
 const getPropName = (str) => {
@@ -26,7 +27,8 @@ const skipInternalObjectProps = (strArr, counter, pos, flag = false) => {
   return skipInternalObjectProps(strArr, counter, pos + 1, true);
 };
 
-const getSorted = (strArr, array) => fp.cloneDeep(array).sort(
+const getSorted = (strArr, array) => sort(
+  array,
   (item1, item2) => {
     if (item1[0] === item2[0]) {
       const v1 = strArr[item1[1]].includes('-') ? -1 : 0;
