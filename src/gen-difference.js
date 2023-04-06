@@ -120,6 +120,7 @@ const genDifferenceArray = (buf1, buf2, flag) => {
     getDiffArr(diff12, flag, '-', buf1, 0, []),
     getDiffArr(diff21, flag, '+', buf2, 0, []),
   );
+  // ключи, существующие в обоих файлах
   const inters = _.intersection(keys1, keys2);
   return addIntersElements(inters, buf1, buf2, 0, arr);
 };
@@ -207,6 +208,64 @@ const getAllSubItemsWhithNewFlag = (oldItem, newItem, key, flag) => {
   );
 };
 
+const getDifferenceString1 = (objs1, data, str, index) => {
+  if (index === objs1.length) {
+    return str;
+  }
+  const item = objs1[index];
+  const obj = selectData(data, item[1], item[0]);
+  if (obj[0] !== OBJ_IDENT) {
+    // объект из первого списка есть и во 2-м
+    const newItem = getItemWhithNewFlag(item, [], 0, flags.BOTH);
+    const newObj = getItemWhithNewFlag(obj, [], 0, flags.BOTH);
+    return getDifferenceString1(
+      objs1,
+      data,
+      // eslint-disable-next-line no-use-before-define
+      fp.concat(str)(genDifference(newItem, newObj)),
+      index + 1,
+    );
+  }
+  if (item[3] === flags.FIRST) {
+    // объекта из первого списка нет во втором
+    const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
+    const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.FIRST);
+    // eslint-disable-next-line no-use-before-define
+    return getDifferenceString1(
+      objs1,
+      data,
+      // eslint-disable-next-line no-use-before-define
+      fp.concat(str)(genDifference(newItem, obj)),
+      index + 1,
+    );
+  }
+  // объекта из первого списка нет во втором и он не содержит подобъектов
+  // item[3] === flags.NONE
+  // eslint-disable-next-line no-use-before-define
+  const addStr = fp.concat(str)(genDifference(item, obj));
+  return getDifferenceString1(objs1, data, addStr, index + 1);
+};
+
+const getDifferenceString2 = (objs2, data, str, index) => {
+  if (index === objs2.length) {
+    return str;
+  }
+  const item = objs2[index];
+  const obj = selectData(data, item[1], item[0]);
+  if (obj[0] === OBJ_IDENT) {
+    // объект из 2-го списка единственный
+    const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
+    const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.SECOND);
+    // eslint-disable-next-line no-use-before-define
+    const addStr = fp.concat(str)(genDifference(newItem, obj));
+    return getDifferenceString2(objs2, data, addStr, index + 1);
+  }
+  // ничего не делаем
+  const cloneStr = fp.cloneDeep(str);
+  // eslint-disable-next-line no-use-before-define
+  return getDifferenceString2(objs2, data, cloneStr, index + 1);
+};
+
 // Получение результатов сравнения даанных
 // в неотсортированном виде
 const genDifference = (data1, data2) => {
@@ -216,29 +275,10 @@ const genDifference = (data1, data2) => {
   // списки пара 'ключ: значение'
   const obj1 = _.fromPairs(data1[4].filter((item) => !checkItem(item)));
   const obj2 = _.fromPairs(data2[4].filter((item) => !checkItem(item)));
-  const str1 = [genDifferenceString(obj1, obj2, data1[2], data1[3])];
-  objs1.forEach((item) => {
-    const obj = selectData(data2, item[1], item[0]);
-    if (obj[0] !== OBJ_IDENT) {
-      const newItem = getItemWhithNewFlag(item, [], 0, flags.BOTH);
-      const newObj = getItemWhithNewFlag(obj, [], 0, flags.BOTH);
-      str1.push(genDifference(newItem, newObj));
-    } else if (item[3] === flags.FIRST) {
-      const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
-      const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.FIRST);
-      str1.push(genDifference(newItem, obj));
-    } else {
-      str1.push(genDifference(item, obj));
-    }
-  });
-  objs2.forEach((item) => {
-    const obj = selectData(data1, item[1], item[0]);
-    if (obj[0] === OBJ_IDENT) {
-      const newItem1 = getAllSubItemsWhithNewFlag(item, [], 0, flags.NONE);
-      const newItem = getItemWhithNewFlag(newItem1, [], 0, flags.SECOND);
-      str1.push(genDifference(newItem, obj));
-    }
-  });
+  const str0 = [genDifferenceString(obj1, obj2, data1[2], data1[3])];
+
+  const str1 = getDifferenceString1(objs1, data2, str0, 0);
+  const str2 = getDifferenceString2(objs2, data1, str1, 0);
 
   const res = (data) => {
     const start = '{\n';
@@ -256,7 +296,8 @@ const genDifference = (data1, data2) => {
   };
 
   const fin = `${data1[1] !== OBJ_ROOT ? '  ' : ''}}\n`;
-  const out = fp.concat(res(data1).concat(str1))(fin.padStart(fin.length + 4 * data1[2] - 2, ' '));
+  const out1 = fp.concat(res(data1))(str2);
+  const out = fp.concat(out1)(fin.padStart(fin.length + 4 * data1[2] - 2, ' '));
   return out.join('');
 };
 
